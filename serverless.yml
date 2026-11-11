@@ -1,0 +1,310 @@
+org: luisnieva
+service: ms-proyectos
+
+provider:
+  name: aws
+  runtime: python3.12
+  timeout: 30
+  iam:
+    role: arn:aws:iam::${aws:accountId}:role/LabRole
+  environment:
+    BUCKET_ADJUNTOS: ppm-adjuntos-${aws:accountId}
+    TOPIC_PROYECTOS_ARN: arn:aws:sns:${aws:region}:${aws:accountId}:tema-proyectos
+
+functions:
+  # ---------- Proyectos ----------
+  crearProyecto:
+    name: CrearProyecto
+    handler: crear_proyecto.lambda_handler
+    events:
+      - http:
+          path: /proyectos/crear
+          method: post
+          cors: true
+          integration: lambda
+  listarProyectos:
+    name: ListarProyectos
+    handler: listar_proyectos.lambda_handler
+    events:
+      - http:
+          path: /proyectos/listar
+          method: post
+          cors: true
+          integration: lambda
+  buscarProyecto:
+    name: BuscarProyecto
+    handler: buscar_proyecto.lambda_handler
+    events:
+      - http:
+          path: /proyectos/buscar
+          method: post
+          cors: true
+          integration: lambda
+  modificarProyecto:
+    name: ModificarProyecto
+    handler: modificar_proyecto.lambda_handler
+    events:
+      - http:
+          path: /proyectos/modificar
+          method: put
+          cors: true
+          integration: lambda
+  eliminarProyecto:
+    name: EliminarProyecto
+    handler: eliminar_proyecto.lambda_handler
+    events:
+      - http:
+          path: /proyectos/eliminar
+          method: delete
+          cors: true
+          integration: lambda
+
+  # ---------- Portafolios ----------
+  crearPortafolio:
+    name: CrearPortafolio
+    handler: crear_portafolio.lambda_handler
+    events:
+      - http:
+          path: /portafolios/crear
+          method: post
+          cors: true
+          integration: lambda
+  listarPortafolios:
+    name: ListarPortafolios
+    handler: listar_portafolios.lambda_handler
+    events:
+      - http:
+          path: /portafolios/listar
+          method: post
+          cors: true
+          integration: lambda
+  buscarPortafolio:
+    name: BuscarPortafolio
+    handler: buscar_portafolio.lambda_handler
+    events:
+      - http:
+          path: /portafolios/buscar
+          method: post
+          cors: true
+          integration: lambda
+  modificarPortafolio:
+    name: ModificarPortafolio
+    handler: modificar_portafolio.lambda_handler
+    events:
+      - http:
+          path: /portafolios/modificar
+          method: put
+          cors: true
+          integration: lambda
+
+  # ---------- Adjuntos (S3) ----------
+  generarUrlAdjunto:
+    name: GenerarUrlAdjunto
+    handler: generar_url_adjunto.lambda_handler
+    events:
+      - http:
+          path: /adjuntos/url
+          method: post
+          cors: true
+          integration: lambda
+  listarAdjuntos:
+    name: ListarAdjuntos
+    handler: listar_adjuntos.lambda_handler
+    events:
+      - http:
+          path: /adjuntos/listar
+          method: post
+          cors: true
+          integration: lambda
+  registrarAdjunto:
+    name: RegistrarAdjunto
+    handler: registrar_adjunto.lambda_handler
+
+  # ---------- Resumen y eventos ----------
+  obtenerResumen:
+    name: ObtenerResumen
+    handler: obtener_resumen.lambda_handler
+    events:
+      - http:
+          path: /resumen/obtener
+          method: post
+          cors: true
+          integration: lambda
+  procesarEventosProyectos:
+    name: ProcesarEventosProyectos
+    handler: procesar_eventos_proyectos.lambda_handler
+    events:
+      - sqs:
+          arn: !GetAtt ColaProyectosEventos.Arn
+          batchSize: 1
+
+resources:
+  Resources:
+    # ---------- Tablas DynamoDB ----------
+    TablaProyectos:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: t_proyectos
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: proyecto_id
+            AttributeType: S
+          - AttributeName: estado
+            AttributeType: S
+          - AttributeName: portafolio_id
+            AttributeType: S
+          - AttributeName: fecha_fin
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: proyecto_id
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: gsi_estado
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: estado
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: gsi_portafolio
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: portafolio_id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: gsi_fecha
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: fecha_fin
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+    TablaPortafolios:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: t_portafolios
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: portafolio_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: portafolio_id
+            KeyType: RANGE
+    TablaAdjuntos:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: t_adjuntos
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: adjunto_id
+            AttributeType: S
+          - AttributeName: proyecto_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: adjunto_id
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: gsi_proyecto
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: proyecto_id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+    TablaResumen:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: t_resumen_tenant
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: clave
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: clave
+            KeyType: RANGE
+
+    # ---------- SNS y SQS ----------
+    TemaProyectos:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: tema-proyectos
+    ColaProyectosDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: cola-proyectos-eventos-dlq
+    ColaProyectosEventos:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: cola-proyectos-eventos
+        VisibilityTimeout: 180
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt ColaProyectosDLQ.Arn
+          maxReceiveCount: 2
+    # Permite que los temas SNS de la cuenta (tema-*) escriban en la cola.
+    # Las suscripciones las declara el microservicio que se despliega despues.
+    PoliticaColaProyectos:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - !Ref ColaProyectosEventos
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: sns.amazonaws.com
+              Action: sqs:SendMessage
+              Resource: !GetAtt ColaProyectosEventos.Arn
+              Condition:
+                ArnLike:
+                  aws:SourceArn: arn:aws:sns:${aws:region}:${aws:accountId}:tema-*
+
+    # ---------- S3 ----------
+    BucketAdjuntos:
+      Type: AWS::S3::Bucket
+      DependsOn: PermisoS3RegistrarAdjunto
+      Properties:
+        BucketName: ppm-adjuntos-${aws:accountId}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedMethods: [GET, PUT]
+              AllowedOrigins: ['*']
+              AllowedHeaders: ['*']
+        NotificationConfiguration:
+          LambdaConfigurations:
+            - Event: s3:ObjectCreated:*
+              Function: !GetAtt RegistrarAdjuntoLambdaFunction.Arn
+              Filter:
+                S3Key:
+                  Rules:
+                    - Name: prefix
+                      Value: adjuntos/
+    PermisoS3RegistrarAdjunto:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !GetAtt RegistrarAdjuntoLambdaFunction.Arn
+        Action: lambda:InvokeFunction
+        Principal: s3.amazonaws.com
+        SourceAccount: !Ref AWS::AccountId
+        SourceArn: arn:aws:s3:::ppm-adjuntos-${aws:accountId}
