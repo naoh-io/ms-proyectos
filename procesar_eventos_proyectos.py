@@ -43,6 +43,10 @@ def lambda_handler(event, context):
             actualizar_avance(tenant_id, proyecto_id, 1, 0)
         elif tipo == 'TareaCompletada':
             actualizar_avance(tenant_id, proyecto_id, 0, 1)
+        elif tipo == 'TareaReabierta':
+            actualizar_avance(tenant_id, proyecto_id, 0, -1)
+        elif tipo == 'TareaEliminada':
+            actualizar_avance(tenant_id, proyecto_id, -1, -1 if msg.get('estaba_completada') else 0)
         elif tipo == 'PresupuestoExcedido':
             try:
                 r = tabla.update_item(
