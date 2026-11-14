@@ -12,22 +12,70 @@ provider:
     TOPIC_PROYECTOS_ARN: arn:aws:sns:${aws:region}:${aws:accountId}:tema-proyectos
 
 functions:
-  # ---------- Proyectos ----------
-  crearProyecto:
-    name: CrearProyecto
-    handler: crear_proyecto.lambda_handler
+  proyectos:
+    name: Proyectos
+    handler: proyectos.lambda_handler
     events:
       - http:
           path: /proyectos/crear
           method: post
           cors: true
           integration: lambda
-  listarProyectos:
-    name: ListarProyectos
-    handler: listar_proyectos.lambda_handler
-    events:
       - http:
           path: /proyectos/listar
+          method: post
+          cors: true
+          integration: lambda
+      - http:
+          path: /proyectos/modificar
+          method: put
+          cors: true
+          integration: lambda
+      - http:
+          path: /proyectos/eliminar
+          method: delete
+          cors: true
+          integration: lambda
+  portafolios:
+    name: Portafolios
+    handler: portafolios.lambda_handler
+    events:
+      - http:
+          path: /portafolios/crear
+          method: post
+          cors: true
+          integration: lambda
+      - http:
+          path: /portafolios/listar
+          method: post
+          cors: true
+          integration: lambda
+      - http:
+          path: /portafolios/buscar
+          method: post
+          cors: true
+          integration: lambda
+      - http:
+          path: /portafolios/modificar
+          method: put
+          cors: true
+          integration: lambda
+      - http:
+          path: /resumen/obtener
+          method: post
+          cors: true
+          integration: lambda
+  adjuntos:
+    name: Adjuntos
+    handler: adjuntos.lambda_handler
+    events:
+      - http:
+          path: /adjuntos/url
+          method: post
+          cors: true
+          integration: lambda
+      - http:
+          path: /adjuntos/listar
           method: post
           cors: true
           integration: lambda
@@ -40,96 +88,9 @@ functions:
           method: post
           cors: true
           integration: lambda
-  modificarProyecto:
-    name: ModificarProyecto
-    handler: modificar_proyecto.lambda_handler
-    events:
-      - http:
-          path: /proyectos/modificar
-          method: put
-          cors: true
-          integration: lambda
-  eliminarProyecto:
-    name: EliminarProyecto
-    handler: eliminar_proyecto.lambda_handler
-    events:
-      - http:
-          path: /proyectos/eliminar
-          method: delete
-          cors: true
-          integration: lambda
-
-  # ---------- Portafolios ----------
-  crearPortafolio:
-    name: CrearPortafolio
-    handler: crear_portafolio.lambda_handler
-    events:
-      - http:
-          path: /portafolios/crear
-          method: post
-          cors: true
-          integration: lambda
-  listarPortafolios:
-    name: ListarPortafolios
-    handler: listar_portafolios.lambda_handler
-    events:
-      - http:
-          path: /portafolios/listar
-          method: post
-          cors: true
-          integration: lambda
-  buscarPortafolio:
-    name: BuscarPortafolio
-    handler: buscar_portafolio.lambda_handler
-    events:
-      - http:
-          path: /portafolios/buscar
-          method: post
-          cors: true
-          integration: lambda
-  modificarPortafolio:
-    name: ModificarPortafolio
-    handler: modificar_portafolio.lambda_handler
-    events:
-      - http:
-          path: /portafolios/modificar
-          method: put
-          cors: true
-          integration: lambda
-
-  # ---------- Adjuntos (S3) ----------
-  generarUrlAdjunto:
-    name: GenerarUrlAdjunto
-    handler: generar_url_adjunto.lambda_handler
-    events:
-      - http:
-          path: /adjuntos/url
-          method: post
-          cors: true
-          integration: lambda
-  listarAdjuntos:
-    name: ListarAdjuntos
-    handler: listar_adjuntos.lambda_handler
-    events:
-      - http:
-          path: /adjuntos/listar
-          method: post
-          cors: true
-          integration: lambda
   registrarAdjunto:
     name: RegistrarAdjunto
     handler: registrar_adjunto.lambda_handler
-
-  # ---------- Resumen y eventos ----------
-  obtenerResumen:
-    name: ObtenerResumen
-    handler: obtener_resumen.lambda_handler
-    events:
-      - http:
-          path: /resumen/obtener
-          method: post
-          cors: true
-          integration: lambda
   procesarEventosProyectos:
     name: ProcesarEventosProyectos
     handler: procesar_eventos_proyectos.lambda_handler
