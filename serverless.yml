@@ -98,6 +98,7 @@ functions:
       - sqs:
           arn: !GetAtt ColaProyectosEventos.Arn
           batchSize: 1
+          maximumConcurrency: 2
 
 resources:
   Resources:

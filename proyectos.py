@@ -2,7 +2,7 @@
 # API Gateway (integration: lambda) manda en "requestPath" la ruta del recurso.
 import os
 import uuid
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 from comun import dynamodb, ESTADOS, NO_AUTORIZADO, respuesta, autenticar, ajustar_resumen, publicar, parametros_lista
 from datetime import datetime
 
@@ -71,6 +71,9 @@ def listar_proyectos(event, context):
     if body.get('estado'):
         kwargs['IndexName'] = 'gsi_estado'
         kwargs['KeyConditionExpression'] = Key('tenant_id').eq(tenant_id) & Key('estado').eq(body['estado'])
+        # Estado + portafolio a la vez: el portafolio se aplica como filtro sobre el indice de estado
+        if body.get('portafolio_id'):
+            kwargs['FilterExpression'] = Attr('portafolio_id').eq(body['portafolio_id'])
     elif body.get('portafolio_id'):
         kwargs['IndexName'] = 'gsi_portafolio'
         kwargs['KeyConditionExpression'] = Key('tenant_id').eq(tenant_id) & Key('portafolio_id').eq(body['portafolio_id'])
