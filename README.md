@@ -4,7 +4,7 @@ Microservicio de Proyectos y Portafolios del SaaS PPM (multi-tenant, serverless)
 
 ## Despliegue
 
-1. Desplegar antes `ms-auth` (todas las Lambdas invocan a `ValidarTokenAcceso`).
+1. Desplegar antes `ms-auth` (todas las Lambdas leen `t_tokens_acceso` directo).
 2. `serverless deploy`
 
 Crea: 6 Lambdas, 4 tablas DynamoDB, tema SNS `tema-proyectos`, cola SQS
@@ -60,6 +60,6 @@ Una Lambda atiende varios endpoints: el codigo elige la funcion segun la ruta (`
 - `proyectos.py` -> Lambda **Proyectos**: /proyectos/crear, /proyectos/listar, /proyectos/modificar, /proyectos/eliminar
 - `portafolios.py` -> Lambda **Portafolios**: /portafolios/crear, /portafolios/listar, /portafolios/buscar, /portafolios/modificar, /resumen/obtener
 - `adjuntos.py` -> Lambda **Adjuntos**: /adjuntos/url, /adjuntos/listar
-- `buscar_proyecto.py` (BuscarProyecto, tambien la invocan otros micros), `registrar_adjunto.py` (trigger S3), `procesar_eventos_proyectos.py` (trigger SQS).
+- `buscar_proyecto.py` (BuscarProyecto, solo la usa el frontend), `registrar_adjunto.py` (trigger S3), `procesar_eventos_proyectos.py` (trigger SQS).
 
 `comun.py` es codigo compartido (token, respuestas, helpers), no es una Lambda.

@@ -222,7 +222,7 @@ resources:
         VisibilityTimeout: 180
         RedrivePolicy:
           deadLetterTargetArn: !GetAtt ColaProyectosDLQ.Arn
-          maxReceiveCount: 2
+          maxReceiveCount: 5
     # Permite que los temas SNS de la cuenta (tema-*) escriban en la cola.
     # Las suscripciones las declara el microservicio que se despliega despues.
     PoliticaColaProyectos:
