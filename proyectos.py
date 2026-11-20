@@ -1,10 +1,16 @@
 # Lambda Proyectos (ms-proyectos). Una sola Lambda atiende varios endpoints.
 # API Gateway (integration: lambda) manda en "requestPath" la ruta del recurso.
 import os
+import unicodedata
 import uuid
 from boto3.dynamodb.conditions import Key, Attr
 from comun import dynamodb, ESTADOS, NO_AUTORIZADO, respuesta, autenticar, ajustar_resumen, publicar, parametros_lista
 from datetime import datetime
+
+
+def normalizar(texto):
+    sin_tildes = unicodedata.normalize('NFD', str(texto))
+    return ''.join(c for c in sin_tildes if unicodedata.category(c) != 'Mn').lower().strip()
 
 
 def crear_proyecto(event, context):
@@ -84,10 +90,23 @@ def listar_proyectos(event, context):
         kwargs['KeyConditionExpression'] = Key('tenant_id').eq(tenant_id) & Key('fecha_fin').between(desde, hasta)
     else:
         kwargs['KeyConditionExpression'] = Key('tenant_id').eq(tenant_id)
-    r = tabla.query(**kwargs)
+    texto = normalizar(body.get('texto') or '')
+    if not texto:
+        r = tabla.query(**kwargs)
+        # Salida (json)
+        return respuesta(200, items=r['Items'], count=r['Count'],
+                         last_key=r.get('LastEvaluatedKey'))
+    limite = kwargs.pop('Limit')
+    items = []
+    while True:
+        r = tabla.query(**kwargs)
+        items += [p for p in r['Items'] if texto in normalizar(p.get('nombre', ''))]
+        ultima = r.get('LastEvaluatedKey')
+        if not ultima or len(items) >= limite or context.get_remaining_time_in_millis() < 8000:
+            break
+        kwargs['ExclusiveStartKey'] = ultima
     # Salida (json)
-    return respuesta(200, items=r['Items'], count=r['Count'],
-                     last_key=r.get('LastEvaluatedKey'))
+    return respuesta(200, items=items, count=len(items), last_key=ultima)
 
 
 CAMPOS = ['nombre', 'descripcion', 'estado', 'portafolio_id', 'fecha_fin']

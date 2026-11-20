@@ -15,7 +15,7 @@ Crea: 6 Lambdas, 4 tablas DynamoDB, tema SNS `tema-proyectos`, cola SQS
 | Ruta | Lambda | Cuerpo |
 | --- | --- | --- |
 | POST /proyectos/crear | Proyectos (`proyectos.py`) | nombre, portafolio_id?, estado?, fecha_fin?, descripcion? |
-| POST /proyectos/listar | Proyectos (`proyectos.py`) | estado?, portafolio_id?, fecha_desde?, fecha_hasta?, limit?, last_key? (estado y portafolio_id se pueden combinar) |
+| POST /proyectos/listar | Proyectos (`proyectos.py`) | estado?, portafolio_id?, texto? (busca por nombre), fecha_desde?, fecha_hasta?, limit?, last_key? (estado, portafolio_id y texto se pueden combinar) |
 | POST /proyectos/buscar | BuscarProyecto | proyecto_id |
 | PUT /proyectos/modificar | Proyectos (`proyectos.py`) | proyecto_id + nombre/descripcion/estado/portafolio_id/fecha_fin |
 | DELETE /proyectos/eliminar | Proyectos (`proyectos.py`) | proyecto_id |
